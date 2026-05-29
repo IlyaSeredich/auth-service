@@ -14,4 +14,6 @@ public class KeycloakAuthClientProperties {
     private String realm;
     private String client;
     private String secret;
+    private String redirectUri;
+    private String state;
 }

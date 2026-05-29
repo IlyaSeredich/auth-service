@@ -109,7 +109,7 @@ public class KeycloakConfig {
         clientRepresentation.setStandardFlowEnabled(true);
         clientRepresentation.setPublicClient(false);
         clientRepresentation.setSecret(authClientProperties.getSecret());
-        clientRepresentation.setRedirectUris(List.of("http://localhost:8080/*"));
+        clientRepresentation.setRedirectUris(List.of(authClientProperties.getRedirectUri()));
 
         try(Response response = realmResource.clients().create(clientRepresentation)) {
 
@@ -123,7 +123,6 @@ public class KeycloakConfig {
         manageRepresentation.setPublicClient(false);
         manageRepresentation.setServiceAccountsEnabled(true);
         manageRepresentation.setSecret(manageUsersClientProperties.getSecret());
-        manageRepresentation.setRedirectUris(List.of("http://localhost:8080/*"));
 
         Response response = realmResource
                 .clients()
