@@ -1,4 +1,9 @@
 package com.innowise.authservice.dto;
 
-public record TokenRefreshDto(String token) {
+import jakarta.validation.constraints.NotBlank;
+
+public record TokenRefreshDto(
+        @NotBlank(message = "Username must not be blank")
+        String token
+) {
 }

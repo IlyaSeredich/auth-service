@@ -2,9 +2,13 @@ package com.innowise.authservice.service.impl;
 
 import com.innowise.authservice.client.KeycloakFeignClient;
 import com.innowise.authservice.config.properties.KeycloakAuthClientProperties;
+import com.innowise.authservice.dto.KeycloakExceptionDto;
 import com.innowise.authservice.dto.TokenRefreshDto;
 import com.innowise.authservice.dto.TokenResponseDto;
 import com.innowise.authservice.dto.UserCreateDto;
+import com.innowise.authservice.exception.KeycloakCreateUserException;
+import com.innowise.authservice.exception.StateNotMatchException;
+import com.innowise.authservice.mapper.KeycloakMapper;
 import com.innowise.authservice.mapper.UserMapper;
 import com.innowise.authservice.service.UserService;
 import jakarta.ws.rs.core.Response;
@@ -16,6 +20,7 @@ import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -31,6 +36,7 @@ public class UserServiceImpl implements UserService {
     private final RealmResource realmResource;
     private final UsersResource usersResource;
     private final KeycloakFeignClient keycloakFeignClient;
+    private final KeycloakMapper keycloakMapper;
 
     @Override
     public void createUser(UserCreateDto userCreateDto) {
@@ -39,6 +45,8 @@ public class UserServiceImpl implements UserService {
         UserRepresentation userRepresentation =
                 userMapper.toUserRepresentation(userCreateDto, List.of(credentialRepresentation));
         Response response = usersResource.create(userRepresentation);
+
+        validateResponse(response);
 
         String createdId = CreatedResponseUtil.getCreatedId(response);
         addDefaultRole(createdId);
@@ -61,6 +69,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public TokenResponseDto getTokens(String state, String authCode) {
+        if(!state.equals(authClientProperties.getState())) {
+            throw new StateNotMatchException();
+        }
 
         Map<String, String> paramsMap = new HashMap<>();
         paramsMap.put("grant_type", "authorization_code");
@@ -87,5 +98,13 @@ public class UserServiceImpl implements UserService {
         RoleRepresentation roleRepresentation = realmResource.roles().get("user").toRepresentation();
         UserResource userResource = usersResource.get(userId);
         userResource.roles().realmLevel().add(Collections.singletonList(roleRepresentation));
+    }
+
+    private void validateResponse(Response response) {
+        if (response.getStatus() == HttpStatus.CONFLICT.value()) {
+            String errorMessage = response.readEntity(String.class);
+            KeycloakExceptionDto keycloakExceptionDto = keycloakMapper.toDto(errorMessage);
+            throw new KeycloakCreateUserException(keycloakExceptionDto.errorMessage());
+        }
     }
 }
