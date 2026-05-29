@@ -1,4 +1,4 @@
-package com.seredich.authservice;
+package com.innowise.authservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
