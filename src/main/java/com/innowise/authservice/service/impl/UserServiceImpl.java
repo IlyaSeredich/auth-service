@@ -2,7 +2,8 @@ package com.innowise.authservice.service.impl;
 
 import com.innowise.authservice.client.KeycloakFeignClient;
 import com.innowise.authservice.config.properties.KeycloakAuthClientProperties;
-import com.innowise.authservice.dto.LoginResponseDto;
+import com.innowise.authservice.dto.TokenRefreshDto;
+import com.innowise.authservice.dto.TokenResponseDto;
 import com.innowise.authservice.dto.UserCreateDto;
 import com.innowise.authservice.mapper.UserMapper;
 import com.innowise.authservice.service.UserService;
@@ -59,7 +60,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public LoginResponseDto getTokens(String state, String authCode) {
+    public TokenResponseDto getTokens(String state, String authCode) {
 
         Map<String, String> paramsMap = new HashMap<>();
         paramsMap.put("grant_type", "authorization_code");
@@ -67,6 +68,17 @@ public class UserServiceImpl implements UserService {
         paramsMap.put("redirect_uri", authClientProperties.getRedirectUri());
         paramsMap.put("client_id", authClientProperties.getClient());
         paramsMap.put("client_secret", authClientProperties.getSecret());
+
+        return keycloakFeignClient.getTokens(paramsMap);
+    }
+
+    @Override
+    public TokenResponseDto refreshToken(TokenRefreshDto tokenRefreshDto) {
+        Map<String, String> paramsMap = new HashMap<>();
+        paramsMap.put("grant_type", "refresh_token");
+        paramsMap.put("client_id", authClientProperties.getClient());
+        paramsMap.put("client_secret", authClientProperties.getSecret());
+        paramsMap.put("refresh_token", tokenRefreshDto.token());
 
         return keycloakFeignClient.getTokens(paramsMap);
     }

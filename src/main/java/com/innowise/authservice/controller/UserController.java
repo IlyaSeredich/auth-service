@@ -1,6 +1,7 @@
 package com.innowise.authservice.controller;
 
-import com.innowise.authservice.dto.LoginResponseDto;
+import com.innowise.authservice.dto.TokenRefreshDto;
+import com.innowise.authservice.dto.TokenResponseDto;
 import com.innowise.authservice.dto.UserCreateDto;
 import com.innowise.authservice.service.UserService;
 import lombok.AllArgsConstructor;
@@ -33,11 +34,17 @@ public class UserController {
     }
 
     @GetMapping("/callback")
-    public ResponseEntity<LoginResponseDto> getToken(
+    public ResponseEntity<TokenResponseDto> getToken(
             @RequestParam String state,
             @RequestParam String code
     ) {
-        LoginResponseDto loginResponseDto = userService.getTokens(state, code);
-        return ResponseEntity.ok(loginResponseDto);
+        TokenResponseDto tokenResponseDto = userService.getTokens(state, code);
+        return ResponseEntity.ok(tokenResponseDto);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<TokenResponseDto> refreshToken(@RequestBody TokenRefreshDto tokenRefreshDto) {
+        TokenResponseDto tokenResponseDto = userService.refreshToken(tokenRefreshDto);
+        return ResponseEntity.ok(tokenResponseDto);
     }
 }
