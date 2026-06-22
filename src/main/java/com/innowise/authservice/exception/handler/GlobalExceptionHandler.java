@@ -3,7 +3,9 @@ package com.innowise.authservice.exception.handler;
 
 import com.innowise.authservice.dto.ErrorResponseDto;
 import com.innowise.authservice.exception.KeycloakCreateUserException;
-import com.innowise.authservice.exception.StateNotMatchException;
+import com.innowise.authservice.exception.UsernameAlreadyExistsException;
+import com.innowise.authservice.exception.UsernameNotFoundException;
+import com.innowise.authservice.exception.WrongPasswordException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -17,9 +19,37 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(StateNotMatchException.class)
-    public ResponseEntity<ErrorResponseDto> handleStateNotMatchException(
-            StateNotMatchException ex,
+    @ExceptionHandler(UsernameAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponseDto> handleUsernameAlreadyExistsException(
+            UsernameAlreadyExistsException ex,
+            HttpServletRequest request
+    ) {
+        ErrorResponseDto responseDto = new ErrorResponseDto(
+                ex.getMessage(),
+                HttpStatus.CONFLICT,
+                request.getRequestURI()
+        );
+
+        return new ResponseEntity<>(responseDto, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<ErrorResponseDto> handleUsernameNotFoundException(
+            UsernameNotFoundException ex,
+            HttpServletRequest request
+    ) {
+        ErrorResponseDto responseDto = new ErrorResponseDto(
+                ex.getMessage(),
+                HttpStatus.UNAUTHORIZED,
+                request.getRequestURI()
+        );
+
+        return new ResponseEntity<>(responseDto, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(WrongPasswordException.class)
+    public ResponseEntity<ErrorResponseDto> handleWrongPasswordException(
+            WrongPasswordException ex,
             HttpServletRequest request
     ) {
         ErrorResponseDto responseDto = new ErrorResponseDto(

@@ -106,13 +106,15 @@ public class KeycloakConfig {
     private void createAuthClient() {
         ClientRepresentation clientRepresentation = new ClientRepresentation();
         clientRepresentation.setClientId(authClientProperties.getClient());
-        clientRepresentation.setStandardFlowEnabled(true);
         clientRepresentation.setPublicClient(false);
         clientRepresentation.setSecret(authClientProperties.getSecret());
-        clientRepresentation.setRedirectUris(List.of(authClientProperties.getRedirectUri()));
+        clientRepresentation.setDirectAccessGrantsEnabled(true);
+        clientRepresentation.setDefaultClientScopes(List.of("profile", "roles"));
 
         try(Response response = realmResource.clients().create(clientRepresentation)) {
-
+            if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
+                throw new RuntimeException("Failed to create client " + authClientProperties.getClient());
+            }
         }
     }
 
@@ -124,11 +126,14 @@ public class KeycloakConfig {
         manageRepresentation.setServiceAccountsEnabled(true);
         manageRepresentation.setSecret(manageUsersClientProperties.getSecret());
 
-        Response response = realmResource
-                .clients()
-                .create(manageRepresentation);
+        try(Response response = realmResource.clients().create(manageRepresentation);) {
+            if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
+                throw new RuntimeException("Failed to create client " + manageUsersClientProperties.getClient());
+            }
 
-        configureManageUsersClient(response);
+            configureManageUsersClient(response);
+        }
+
     }
 
     private void configureManageUsersClient(Response response) {

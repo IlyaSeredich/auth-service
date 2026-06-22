@@ -5,8 +5,8 @@ import com.innowise.authservice.dto.TokenResponseDto;
 import com.innowise.authservice.dto.UserCreateDto;
 import com.innowise.authservice.dto.UserLoginDto;
 
-public interface UserService {
-    void createUser(UserCreateDto userCreateDto);
+public interface KeycloakService {
+    String createKeycloakUser(UserCreateDto userCreateDto);
     TokenResponseDto getTokens(UserLoginDto userLoginDto);
     TokenResponseDto refreshToken(TokenRefreshDto tokenRefreshDto);
 }

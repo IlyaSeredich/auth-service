@@ -1,4 +1,23 @@
 services:
+  postgres:
+    image: postgres:16
+    container_name: postgres-as
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: '${DB_DATABASE}'
+      POSTGRES_USER: '${DB_USER}'
+      POSTGRES_PASSWORD: '${DB_PASSWORD}'
+      APP_USER: '${APP_USER}'
+      APP_USER_PASSWORD: '${APP_USER_PASSWORD}'
+    ports:
+      - '${DB_PORT}:5432'
+    networks:
+      - auth-service-network
+    volumes:
+      - postgres_auth_service_data:/var/lib/postgresql/data
+      - ./docker/postgres/init/init-user.sh:/docker-entrypoint-initdb.d/init-user.sh
+
+
   keycloak-database:
     container_name: keycloak-database
     image: postgres:16
@@ -65,6 +84,7 @@ services:
 
 volumes:
   keycloak_postgres:
+  postgres_auth_service_data:
 
 networks:
   auth-service-network:
