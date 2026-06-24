@@ -10,10 +10,10 @@ import java.util.Map;
 
 @FeignClient(
         name = "keycloak",
-        url = "http://localhost:8080/realms/app-realm/protocol/openid-connect"
+        url = "${keycloak.open-id.connect.uri}"
 )
 public interface KeycloakFeignClient {
-    @PostMapping(value = "/token", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    @PostMapping(consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     TokenResponseDto getTokens(@RequestBody Map<String, String> params);
 }
 

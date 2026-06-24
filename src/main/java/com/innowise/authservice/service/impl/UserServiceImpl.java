@@ -1,10 +1,9 @@
 package com.innowise.authservice.service.impl;
 
-import com.innowise.authservice.dto.TokenRefreshDto;
-import com.innowise.authservice.dto.TokenResponseDto;
-import com.innowise.authservice.dto.UserCreateDto;
-import com.innowise.authservice.dto.UserLoginDto;
+import com.innowise.authservice.client.UserServiceFeignClient;
+import com.innowise.authservice.dto.*;
 import com.innowise.authservice.entity.User;
+import com.innowise.authservice.exception.UserCreatingException;
 import com.innowise.authservice.exception.UsernameAlreadyExistsException;
 import com.innowise.authservice.exception.UsernameNotFoundException;
 import com.innowise.authservice.exception.WrongPasswordException;
@@ -12,6 +11,7 @@ import com.innowise.authservice.mapper.UserMapper;
 import com.innowise.authservice.repository.UserRepository;
 import com.innowise.authservice.service.KeycloakService;
 import com.innowise.authservice.service.UserService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,8 +25,10 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final KeycloakService keycloakService;
     private final PasswordEncoder passwordEncoder;
+    private final UserServiceFeignClient userServiceFeignClient;
 
     @Override
+    @Transactional
     public void createUser(UserCreateDto userCreateDto) {
         validateUsernameForCreating(userCreateDto.username());
 
@@ -35,7 +37,32 @@ public class UserServiceImpl implements UserService {
 
         User user = userMapper.toUser(UUID.fromString(id), userCreateDto.username(), hashedPassword);
 
-        userRepository.save(user);
+        User savedUser;
+
+        try {
+            savedUser = userRepository.save(user);
+        } catch (Exception ex) {
+            keycloakService.deleteKeycloakUser(id);
+            throw new UserCreatingException();
+        }
+
+        UserServiceCreateDto userServiceCreateDto =
+                userMapper.toUserServiceCreateDto(userCreateDto, UUID.fromString(id));
+
+        try {
+            TokenResponseDto tokenResponseDto =
+                    keycloakService.getTokens(
+                            new UserLoginDto(userCreateDto.username(),
+                                    userCreateDto.password())
+                    );
+            userServiceFeignClient.createUser("Bearer " + tokenResponseDto.accessToken(),
+                    userServiceCreateDto);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            keycloakService.deleteKeycloakUser(id);
+            userRepository.delete(savedUser);
+            throw new UserCreatingException();
+        }
     }
 
     @Override
@@ -64,4 +91,6 @@ public class UserServiceImpl implements UserService {
             throw new WrongPasswordException();
         }
     }
+
+
 }

@@ -109,7 +109,6 @@ public class KeycloakConfig {
         clientRepresentation.setPublicClient(false);
         clientRepresentation.setSecret(authClientProperties.getSecret());
         clientRepresentation.setDirectAccessGrantsEnabled(true);
-        clientRepresentation.setDefaultClientScopes(List.of("profile", "roles"));
 
         try(Response response = realmResource.clients().create(clientRepresentation)) {
             if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
@@ -126,7 +125,7 @@ public class KeycloakConfig {
         manageRepresentation.setServiceAccountsEnabled(true);
         manageRepresentation.setSecret(manageUsersClientProperties.getSecret());
 
-        try(Response response = realmResource.clients().create(manageRepresentation);) {
+        try(Response response = realmResource.clients().create(manageRepresentation)) {
             if (response.getStatus() != Response.Status.CREATED.getStatusCode()) {
                 throw new RuntimeException("Failed to create client " + manageUsersClientProperties.getClient());
             }

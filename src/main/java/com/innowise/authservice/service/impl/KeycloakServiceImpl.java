@@ -3,9 +3,13 @@ package com.innowise.authservice.service.impl;
 import com.innowise.authservice.client.KeycloakFeignClient;
 import com.innowise.authservice.config.properties.KeycloakAuthClientProperties;
 import com.innowise.authservice.dto.*;
+import com.innowise.authservice.exception.KeycloakBadRequestException;
 import com.innowise.authservice.exception.KeycloakCreateUserException;
+import com.innowise.authservice.exception.KeycloakTokenException;
+import com.innowise.authservice.exception.KeycloakUnavailableException;
 import com.innowise.authservice.mapper.KeycloakMapper;
 import com.innowise.authservice.service.KeycloakService;
+import feign.FeignException;
 import jakarta.ws.rs.core.Response;
 import lombok.AllArgsConstructor;
 import org.keycloak.admin.client.CreatedResponseUtil;
@@ -57,7 +61,16 @@ public class KeycloakServiceImpl implements KeycloakService {
         paramsMap.put("client_id", authClientProperties.getClient());
         paramsMap.put("client_secret", authClientProperties.getSecret());
 
-        return keycloakFeignClient.getTokens(paramsMap);
+        try {
+            return keycloakFeignClient.getTokens(paramsMap);
+        } catch (
+                FeignException.BadRequest |
+                FeignException.Unauthorized |
+                FeignException.Forbidden ex) {
+            throw new KeycloakBadRequestException();
+        } catch (Exception ex) {
+            throw new KeycloakUnavailableException();
+        }
     }
 
     @Override
@@ -68,7 +81,21 @@ public class KeycloakServiceImpl implements KeycloakService {
         paramsMap.put("client_secret", authClientProperties.getSecret());
         paramsMap.put("refresh_token", tokenRefreshDto.token());
 
-        return keycloakFeignClient.getTokens(paramsMap);
+        try {
+            return keycloakFeignClient.getTokens(paramsMap);
+        } catch (FeignException.BadRequest |
+                 FeignException.Unauthorized |
+                 FeignException.Forbidden ex) {
+            throw new KeycloakTokenException();
+        } catch (Exception ex) {
+            throw new KeycloakUnavailableException();
+        }
+    }
+
+    @Override
+    public void deleteKeycloakUser(String userId) {
+        Response response = usersResource.delete(userId);
+        validateResponse(response);
     }
 
     private void addDefaultRole(String userId) {

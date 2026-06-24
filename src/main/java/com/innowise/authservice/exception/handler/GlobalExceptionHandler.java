@@ -2,10 +2,7 @@ package com.innowise.authservice.exception.handler;
 
 
 import com.innowise.authservice.dto.ErrorResponseDto;
-import com.innowise.authservice.exception.KeycloakCreateUserException;
-import com.innowise.authservice.exception.UsernameAlreadyExistsException;
-import com.innowise.authservice.exception.UsernameNotFoundException;
-import com.innowise.authservice.exception.WrongPasswordException;
+import com.innowise.authservice.exception.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -75,6 +72,62 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(responseDto, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(KeycloakBadRequestException.class)
+    public ResponseEntity<ErrorResponseDto> handleKeycloakBadRequestException(
+            KeycloakBadRequestException ex,
+            HttpServletRequest request
+    ) {
+        ErrorResponseDto responseDto = new ErrorResponseDto(
+                ex.getMessage(),
+                HttpStatus.UNAUTHORIZED,
+                request.getRequestURI()
+        );
+
+        return new ResponseEntity<>(responseDto, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(KeycloakUnavailableException.class)
+    public ResponseEntity<ErrorResponseDto> handleKeycloakUnavailableException(
+            KeycloakUnavailableException ex,
+            HttpServletRequest request
+    ) {
+        ErrorResponseDto responseDto = new ErrorResponseDto(
+                ex.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                request.getRequestURI()
+        );
+
+        return new ResponseEntity<>(responseDto, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(KeycloakTokenException.class)
+    public ResponseEntity<ErrorResponseDto> handleKeycloakTokenException(
+            KeycloakTokenException ex,
+            HttpServletRequest request
+    ) {
+        ErrorResponseDto responseDto = new ErrorResponseDto(
+                ex.getMessage(),
+                HttpStatus.FORBIDDEN,
+                request.getRequestURI()
+        );
+
+        return new ResponseEntity<>(responseDto, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(UserCreatingException.class)
+    public ResponseEntity<ErrorResponseDto> handleUserCreatingException(
+            UserCreatingException ex,
+            HttpServletRequest request
+    ) {
+        ErrorResponseDto responseDto = new ErrorResponseDto(
+                ex.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                request.getRequestURI()
+        );
+
+        return new ResponseEntity<>(responseDto, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponseDto> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException ex,
@@ -122,18 +175,18 @@ public class GlobalExceptionHandler {
                 .body(errorResponseDto);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponseDto> handleException(
-            HttpServletRequest request
-    ) {
-        ErrorResponseDto responseDto = new ErrorResponseDto(
-                "An unexpected error occurred",
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                request.getRequestURI()
-        );
-
-        return new ResponseEntity<>(responseDto, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+//    @ExceptionHandler(Exception.class)
+//    public ResponseEntity<ErrorResponseDto> handleException(
+//            HttpServletRequest request
+//    ) {
+//        ErrorResponseDto responseDto = new ErrorResponseDto(
+//                "An unexpected error occurred",
+//                HttpStatus.INTERNAL_SERVER_ERROR,
+//                request.getRequestURI()
+//        );
+//
+//        return new ResponseEntity<>(responseDto, HttpStatus.INTERNAL_SERVER_ERROR);
+//    }
 
 }
 
