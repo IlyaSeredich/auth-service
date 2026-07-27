@@ -27,6 +27,8 @@ public interface KeycloakMapper {
 
     @Mapping(target = "credentials", source = "credentials")
     @Mapping(target = "enabled", constant = "true")
+    @Mapping(target = "email", source = "userCreateDto.email")
+    @Mapping(target = "emailVerified", constant = "true")
     UserRepresentation toUserRepresentation(UserCreateDto userCreateDto, List<CredentialRepresentation> credentials);
 
     @Mapping(target = "temporary", constant = "false")
